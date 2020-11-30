@@ -11,7 +11,7 @@ b: facilidade de contágio de um indivíduo;
 k: probabilidade que um indivíduo se recupere; 
 S: número de indivíduos suscetíveis (que ainda não estão contaminados);
 I: número de indivíduos infectados (capazes de infectar indivíduos S);
-t:  instantes de tempo nos quais o modelo é simulado (em horas).
+t: instantes de tempo nos quais o modelo é simulado (em horas).
 
 Comando de compilar e rodar o programa no Linux:
 make all
