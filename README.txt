@@ -3,7 +3,7 @@ Modelo SIR para simulação epidemiológica na linguagem C
 Aluno:
 João Filipe do Nascimento e Silva
 
-Para gerar o arquivo SIR_Model, deve-se preencher o arquivo "parametros.csv" com os seguintes dados, respeitando os espaçamentos e as vírgulas:
+Para gerar o arquivo SIR_Model.csv, deve-se preencher o arquivo "parametros.csv" com os seguintes dados, respeitando os espaçamentos e as vírgulas:
 b,k,S,I,t
 
 LEGENDA
