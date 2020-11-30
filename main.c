@@ -6,35 +6,59 @@
 
 #define DEBUG 0
 
-/** 
- * Setando parâmetros básicos caso não encontre o arquivo na pasta
+/**
+LEGENDA
+S:número de indivíduos suscetíveis (que ainda não estão contaminados);
+I:número de indivíduos infectados (capazes de infectar indivíduos S);
+R:número de indivíduos removidos (que se recuperaram, tornaram-se imunes ou faleceram).
+h:pequeno intervalo de tempo (em horas);
+b:facilidade de contágio de um indivíduo;
+k:probabilidade que um indivíduo se recupere;
+t:instantes de tempo nos quais o modelo é simulado (em horas);
+Nb:número de pessoas suscetíveis que se infectaram em um intervalo de tempo Tb;
+Tb:intervalo de tempo de indivíduos suscetíveis que se infectaram;
+Sb:número de pessoas suscetíveis no início da observação;
+Ib:número de pessoas infectadas no início da observação;
+mk:quantos indivíduos se recuperaram; 
+nk:total de indivíduos;
+Tk: intervalo de tempo de indivíduos recuperados;
+S0:número de indivíduos suscetíveis no início da análise;
+I0:número de indivíduos infectados no início da análise;
+R0:número de indivíduos recuperados no início da análise;
 */
-double b = 520 / 365;
-double k = 1 / 7;
-double S0 = 60;
-double I0 = 6;
-double h = 70;
+
+/** 
+ * Setando os parâmetros básicos
+*/
+double b;
+double k;
+double h;
+double Nb, Tb, Sb, Ib;
+double mk, nk, Tk;
+double S0;
+double I0;
+double R0;
 
 /** 
  * Setando variáveis e taxas de mudança
 */
-double t, S, I, R, Pop[3];
-double dPop[3];
+double t, S, I, R, Populacao[3];
+double dPopulacao[3];
 
 /**
- * Inicialização das equações e Método de Runge-Kutta
+ * Inicialização das equações
 */
-void Diff(double Pop[3])
+void Calc(double Populacao[3])
 {
-	double tmpS, tmpI, tmpR;
+	double tempS, tempI, tempR;
 
-	tmpS = Pop[0];
-	tmpI = Pop[1];
-	tmpR = Pop[2];
+	tempS = Populacao[0];
+	tempI = Populacao[1];
+	tempR = Populacao[2];
 
-	dPop[0] = -b * tmpS * tmpI;
-	dPop[1] = b * tmpS * tmpI - k * tmpI;
-	dPop[2] = k * tmpI;
+	dPopulacao[0] = -b * tempS * tempI;
+	dPopulacao[1] = b * tempS * tempI - k * tempI;
+	dPopulacao[2] = k * tempI;
 
 	return;
 }
@@ -44,26 +68,28 @@ void Diff(double Pop[3])
 */
 int main()
 {
-	FILE *arq;
-	arq = fopen("parametros.csv", "r");
+	FILE *arquivo;
+	arquivo = fopen("SIR_Model_parametros.csv", "r");
 
-	if (arq == NULL)
+	if (arquivo == NULL)
 	{
 		printf("Problemas na criação do arquivo\n");
 		return 0;
 	}
 	else
 	{
-		fscanf(arq, "%lf,%lf,%lf,%lf,%lf", &b, &k, &S0, &I0, &h);
+		fscanf(arquivo, "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf", &S0, &I0, &R0, &h, &Nb, &Tb, &Sb, &Ib, &mk, &nk, &Tk, &t);
 	}
 
 	double step, Every;
+  b = (Nb)/(Tb*Sb*Ib);
+  k = (mk)/(nk*Tk);
 
 	checkpoint();
 
 	S = S0;
 	I = I0;
-	R = 1 - S - I;
+	R = 0;
 
 	/**
 	 * Escala de tempo adequada
@@ -77,9 +103,9 @@ int main()
 	}
 
 	if (DEBUG)
-		printf("Usando um tempo provisório %lf and apresentando toda data %lf\n\n", step, Every);
+		printf("Usando um tempo provisório %lf e apresentando todo dado %lf\n\n", step, Every);
 
-	if ((arq = fopen("SIR_Model.csv", "w")) == NULL)
+	if ((arquivo = fopen("SIR_Model_final.csv", "w")) == NULL)
 	{
 		printf("O arquivo não pode ser aberto para que seja escrito\n");
 		exit(1);
@@ -89,8 +115,8 @@ int main()
 	 * Iteração principal
 	*/
 	t = 0;
-
-	saida(arq);
+   
+	saida(arquivo);
 
 	do
 	{
@@ -99,7 +125,7 @@ int main()
 
 		if (floor(t / Every) > floor((t - step) / Every))
 		{
-			saida(arq);
+			saida(arquivo);
 		}
 		else
 		{
@@ -110,45 +136,66 @@ int main()
 		}
 	} while (t < h);
 
-	saida(arq);
-	fclose(arq);
+	saida(arquivo);
+	fclose(arquivo);
 }
 
 /**
  * Funções
 */
-void leitura(FILE *arq)
+void leitura(FILE *arquivo)
 {
 	char str[200];
-	fscanf(arq, "%s", str);
-	fscanf(arq, "%lf", &b);
+	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &S0);
 
-	fscanf(arq, "%s", str);
-	fscanf(arq, "%lf", &k);
+	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &I0);
 
-	fscanf(arq, "%s", str);
-	fscanf(arq, "%lf", &S0);
+  	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &R0);
 
-	fscanf(arq, "%s", str);
-	fscanf(arq, "%lf", &I0);
+	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &h);
 
-	fscanf(arq, "%s", str);
-	fscanf(arq, "%lf", &h);
+	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &Nb);
 
-	fclose(arq);
+	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &Tb);
+
+  	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &Sb);
+
+  	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &Ib);
+
+  	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &mk);
+
+  	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &nk);
+
+  	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &Tk);
+
+  	fscanf(arquivo, "%s", str);
+	fscanf(arquivo, "%lf", &t);
+
+	fclose(arquivo);
 }
 
 void checkpoint()
 {
 	if (S0 <= 0)
 	{
-		printf("O número de suscetíveis (%lf) é menor ou igual a zero\n", S0);
+		printf("O número de suscetíveis (%.lf) é menor ou igual a zero\n", S0);
 		exit(1);
 	}
 
 	if (I0 <= 0)
 	{
-		printf("O número inicial de infectados (%lf) é menor ou igual a zero\n", I0);
+		printf("O número inicial de infectados (%.lf) é menor ou igual a zero\n", I0);
 		exit(1);
 	}
 
@@ -172,7 +219,7 @@ void checkpoint()
 
 	if (S0 + I0 > 1)
 	{
-		printf("O nível inicial de suspeitos e infectados (%lf + %lf = %lf) é maior do que 1\n", S0, I0, S0 + I0);
+		printf("O nível inicial de suspeitos e infectados (%.lf + %.lf = %.lf) é maior do que 1\n", S0, I0, S0 + I0);
 	}
 
 	if (b < k)
@@ -181,58 +228,58 @@ void checkpoint()
 	}
 }
 
-void saida(FILE *arq)
+void saida(FILE *arquivo)
 {
-	if (arq != stdout)
+	if (arquivo != stdout)
 	{
-		fprintf(arq, "%lf,%lf,%lf,%lf\n", S, I, R, t);
+		fprintf(arquivo, "%.lf,%.lf,%.lf,%.lf\n", S, I, R, t);
 	}
 
 	if (DEBUG)
 	{
-		printf("%lf,%lf,%lf,%lf\n", S, I, R, t);
+		printf("%.lf,%.lf,%.lf,%.lf\n", S, I, R, t);
 	}
 }
 
 void Runge_Kutta(double step)
 {
 	int i;
-	double dPop1[3], dPop2[3], dPop3[3], dPop4[3];
-	double tmpPop[3], inicialPop[3];
+	double dPopulacao1[3], dPopulacao2[3], dPopulacao3[3], dPopulacao4[3];
+	double tempPopulacao[3], inicialPopulacao[3];
 
-	inicialPop[0] = S;
-	inicialPop[1] = I;
-	inicialPop[2] = R;
+	inicialPopulacao[0] = S;
+	inicialPopulacao[1] = I;
+	inicialPopulacao[2] = R;
 
-	Diff(inicialPop);
+	Calc(inicialPopulacao);
 
 	for (i = 0; i < 3; i++)
 	{
-		dPop1[i] = dPop[i];
-		tmpPop[i] = inicialPop[i] + step * dPop1[i] / 2;
+		dPopulacao1[i] = dPopulacao[i];
+		tempPopulacao[i] = inicialPopulacao[i] + step * dPopulacao1[i] / 2;
 	}
-	Diff(tmpPop);
+	Calc(tempPopulacao);
 	for (i = 0; i < 3; i++)
 	{
-		dPop2[i] = dPop[i];
-		tmpPop[i] = inicialPop[i] + step * dPop2[i] / 2;
+		dPopulacao2[i] = dPopulacao[i];
+		tempPopulacao[i] = inicialPopulacao[i] + step * dPopulacao2[i] / 2;
 	}
-	Diff(tmpPop);
+	Calc(tempPopulacao);
 	for (i = 0; i < 3; i++)
 	{
-		dPop3[i] = dPop[i];
-		tmpPop[i] = inicialPop[i] + step * dPop3[i];
+		dPopulacao3[i] = dPopulacao[i];
+		tempPopulacao[i] = inicialPopulacao[i] + step * dPopulacao3[i];
 	}
-	Diff(tmpPop);
+	Calc(tempPopulacao);
 	for (i = 0; i < 3; i++)
 	{
-		dPop4[i] = dPop[i];
-		tmpPop[i] = inicialPop[i] + (dPop1[i] / 6 + dPop2[i] / 3 + dPop3[i] / 3 + dPop4[i] / 6) * step;
+		dPopulacao4[i] = dPopulacao[i];
+		tempPopulacao[i] = inicialPopulacao[i] + (dPopulacao1[i] / 6 + dPopulacao2[i] / 3 + dPopulacao3[i] / 3 + dPopulacao4[i] / 6) * step;
 	}
 
-	S = tmpPop[0];
-	I = tmpPop[1];
-	R = tmpPop[2];
+	S = tempPopulacao[0];
+	I = tempPopulacao[1];
+	R = tempPopulacao[2];
 
 	return;
 }
