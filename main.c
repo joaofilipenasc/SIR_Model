@@ -7,7 +7,14 @@
 #define DEBUG 0
 
 /**
+O Modelo SIR é um modelo compartimental que simplifica a modelagem matemática de doenças infecciosas. 
+A população é atribuída a compartimentos com etiquetas - por exemplo, S, I ou R - e elas podem progredir entre compartimentos. 
+Um dos modelos mais simples e populares de SIR é o Kermack-McKendrick model. 
+
+fonte: https://mathworld.wolfram.com/SIRModel.html
+
 LEGENDA
+
 S:número de indivíduos suscetíveis (que ainda não estão contaminados);
 I:número de indivíduos infectados (capazes de infectar indivíduos S);
 R:número de indivíduos removidos (que se recuperaram, tornaram-se imunes ou faleceram).
@@ -28,7 +35,7 @@ R0:número de indivíduos recuperados no início da análise;
 */
 
 /** 
- * Setando os parâmetros básicos
+ * Parâmetros básicos
 */
 double b;
 double k;
@@ -40,13 +47,13 @@ double I0;
 double R0;
 
 /** 
- * Setando variáveis e taxas de mudança
+ * Variáveis
 */
 double t, S, I, R, Populacao[3];
 double dPopulacao[3];
 
 /**
- * Inicialização das equações
+ * Função com as equações de S, I e R
 */
 void Calc(double Populacao[3])
 {
@@ -68,12 +75,15 @@ void Calc(double Populacao[3])
 */
 int main()
 {
+	/**
+	* Abertura do arquivo SIR_Model_parametros.csv e leitura dos dados
+	*/
 	FILE *arquivo;
 	arquivo = fopen("SIR_Model_parametros.csv", "r");
 
 	if (arquivo == NULL)
 	{
-		printf("Problemas na criação do arquivo\n");
+		printf("Problemas na criação do arquivo!\n");
 		return 0;
 	}
 	else
@@ -82,9 +92,16 @@ int main()
 	}
 
 	double step, Every;
-	b = (Nb) / (Tb * Sb * Ib);
-	k = (mk) / (nk * Tk);
+  	
+  	/**
+  	* Equações do b e k, importantes para o cálculo das equações principais (linhas 66, 67 e 68)
+  	*/
+  	b = (Nb)/(Tb*Sb*Ib);
+  	k = (mk)/(nk*Tk);
 
+  	/**
+ 	* Verificar os dados puxados do arquivo SIR_Model_parametros.csv para o programa
+	*/
 	checkpoint();
 
 	S = S0;
@@ -92,7 +109,7 @@ int main()
 	R = 0;
 
 	/**
-	 * Escala de tempo adequada
+	 * Adequação da escala de tempo caso os valores de h e t fornecidos no arquivo SIR_Model_parametros não estejam em horas, para HORAS
 	*/
 	step = 0.01 / ((b + k) * S0);
 
@@ -103,7 +120,13 @@ int main()
 	}
 
 	if (DEBUG)
-		printf("Usando um tempo provisório %lf e apresentando todo dado %lf\n\n", step, Every);
+	{
+		printf("Usando um tempo provisório %lf e saída de dados %lf", step, Every);
+	}
+
+	/**
+	* Arquivo de saída
+	*/
 
 	if ((arquivo = fopen("SIR_Model_final.csv", "w")) == NULL)
 	{
@@ -115,7 +138,7 @@ int main()
 	 * Iteração principal
 	*/
 	t = 0;
-
+   
 	saida(arquivo);
 
 	do
@@ -152,7 +175,7 @@ void leitura(FILE *arquivo)
 	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &I0);
 
-	fscanf(arquivo, "%s", str);
+  	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &R0);
 
 	fscanf(arquivo, "%s", str);
@@ -164,22 +187,22 @@ void leitura(FILE *arquivo)
 	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &Tb);
 
-	fscanf(arquivo, "%s", str);
+  	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &Sb);
 
-	fscanf(arquivo, "%s", str);
+  	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &Ib);
 
-	fscanf(arquivo, "%s", str);
+  	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &mk);
 
-	fscanf(arquivo, "%s", str);
+  	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &nk);
 
-	fscanf(arquivo, "%s", str);
+  	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &Tk);
 
-	fscanf(arquivo, "%s", str);
+  	fscanf(arquivo, "%s", str);
 	fscanf(arquivo, "%lf", &t);
 
 	fclose(arquivo);
@@ -240,6 +263,10 @@ void saida(FILE *arquivo)
 		printf("%.lf,%.lf,%.lf,%.lf\n", S, I, R, t);
 	}
 }
+
+/**
+* Utilização do Método de Runge–Kutta como método de cálculo iterativo entre os arrays de população
+*/
 
 void Runge_Kutta(double step)
 {
